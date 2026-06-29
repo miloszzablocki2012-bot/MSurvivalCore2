@@ -1,0 +1,259 @@
+modules:
+  welcome: true
+  lobby: true
+  inventory: true
+  keys: true
+  ranks: true
+  admin: true
+  bans: true
+  auth: false
+
+server:
+  ip: "msurvival.6mc.pl"
+  shop: "https://msurvivalsklep.pl"
+  discord: "discord.gg/msurvival"
+
+settings:
+  autosave-seconds: 20
+  join-delay-ticks: 20
+
+worlds:
+  lobby-world: "Lobby"
+  survival-world: "world"
+
+lobby:
+  x: -1.0
+  y: 71.0
+  z: 34.0
+  yaw: 180.0
+  pitch: 0.0
+
+survival:
+  x: 0.5
+  y: 100.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+  use-bed-spawn: true
+
+protection:
+  lobby-block-break: true
+  lobby-block-place: true
+  lobby-pvp: false
+  lobby-damage: false
+  lobby-hunger: false
+  lobby-drop: false
+  lobby-pickup: false
+  lobby-inventory-click: false
+
+menu-item:
+  slot: 4
+  material: COMPASS
+  name: "&6&lMSurvival Menu"
+  lore:
+    - "&8Nawigacja serwera"
+    - ""
+    - "&7PPM, aby otworzyć menu."
+    - "&eLobby &8• &aSurvival &8• &6Klucze &8• &bKity"
+
+gui:
+  menu-title: "&6&lMSURVIVAL MENU"
+  keys-title: "&6&lTWOJE KLUCZE"
+  kits-title: "&b&lKITY ZA KLUCZE"
+  filler: BLACK_STAINED_GLASS_PANE
+
+welcome:
+  title: "&6&lMSURVIVAL"
+  subtitle: "&7Witaj, &e%player%&7!"
+  bossbar: "&6&lMSurvival &8» &7Witaj na serwerze, &e%player%&7!"
+  first-join-broadcast: "&6&lMSurvival &8» &e%player% &7dołączył pierwszy raz!"
+  first-join-commands:
+    - "give %player% bread 16"
+    - "give %player% stone_sword 1"
+    - "give %player% stone_pickaxe 1"
+  daily-cooldown-seconds: 86400
+  daily-commands:
+    - "give %player% bread 16"
+    - "give %player% iron_ingot 8"
+    - "give %player% golden_apple 1"
+
+weekly:
+  cooldown-seconds: 604800
+  random:
+    klasyczny: 85
+    zelazny: 15
+
+key-item:
+  material: TRIPWIRE_HOOK
+  name: "&6&l✦ %key_name% &6&l✦"
+  lore:
+    - "&8━━━━━━━━━━━━━━━━"
+    - "&7Typ klucza: &f%key_name%"
+    - "&7Przedmiot: &eZaczep na linkę"
+    - ""
+    - "&7To jest przepustka do kitu."
+    - "&eOtwórz &b/kits&e i wybierz kit."
+    - ""
+    - "&6MSurvival.pl"
+    - "&8━━━━━━━━━━━━━━━━"
+
+keys:
+  klasyczny:
+    display: "&f&lKlucz Klasyczny"
+  zelazny:
+    display: "&7&lKlucz Żelazny"
+  diamentowy:
+    display: "&b&lKlucz Diamentowy"
+  epic:
+    display: "&5&lKlucz Epic"
+  legendarny:
+    display: "&6&lKlucz Legendarny"
+  mityczny:
+    display: "&d&lKlucz Mityczny"
+  boski:
+    display: "&4&lKlucz Boski"
+
+kits:
+  klasyczny:
+    slot: 10
+    material: STONE_PICKAXE
+    name: "&f&lKit Klasyczny"
+    required-key: klasyczny
+  zelazny:
+    slot: 11
+    material: IRON_CHESTPLATE
+    name: "&7&lKit Żelazny"
+    required-key: zelazny
+  diamentowy:
+    slot: 12
+    material: DIAMOND_CHESTPLATE
+    name: "&b&lKit Diamentowy"
+    required-key: diamentowy
+  epic:
+    slot: 13
+    material: DIAMOND_SWORD
+    name: "&5&lKit Epic"
+    required-key: epic
+  legendarny:
+    slot: 14
+    material: NETHERITE_CHESTPLATE
+    name: "&6&lKit Legendarny"
+    required-key: legendarny
+    random-rewards:
+      legendarny: 80
+      mityczny: 15
+      boski: 5
+  mityczny:
+    slot: 15
+    material: NETHER_STAR
+    name: "&d&lKit Mityczny"
+    required-key: mityczny
+    random-rewards:
+      mityczny: 80
+      boski: 20
+  boski:
+    slot: 16
+    material: DRAGON_EGG
+    name: "&4&lKit Boski"
+    required-key: boski
+
+ranks:
+  wlasciciel:
+    display: "&6&lWŁAŚCICIEL"
+    prefix: "&6&l👑 WŁAŚCICIEL &6"
+    tab-prefix: "&6&l👑 "
+    name-color: "&6"
+    priority: 100
+  developer:
+    display: "&b&lDEVELOPER"
+    prefix: "&b&l⚙ DEVELOPER &b"
+    tab-prefix: "&b&l⚙ "
+    name-color: "&b"
+    priority: 90
+  admin:
+    display: "&c&lADMIN"
+    prefix: "&c&l🛡 ADMIN &c"
+    tab-prefix: "&c&l🛡 "
+    name-color: "&c"
+    priority: 80
+  mod:
+    display: "&2&lMOD"
+    prefix: "&2&l🔨 MOD &2"
+    tab-prefix: "&2&l🔨 "
+    name-color: "&2"
+    priority: 70
+  helper:
+    display: "&a&lHELPER"
+    prefix: "&a&l💬 HELPER &a"
+    tab-prefix: "&a&l💬 "
+    name-color: "&a"
+    priority: 60
+  youtuber:
+    display: "&c&lYOUTUBE"
+    prefix: "&c&l🎥 YOUTUBE &c"
+    tab-prefix: "&c&l🎥 "
+    name-color: "&c"
+    priority: 50
+  tiktoker:
+    display: "&d&lTIKTOK"
+    prefix: "&d&l📱 TIKTOK &d"
+    tab-prefix: "&d&l📱 "
+    name-color: "&d"
+    priority: 45
+  vipplus:
+    display: "&e&lVIP+"
+    prefix: "&e&l⭐ VIP+ &e"
+    tab-prefix: "&e&l⭐ "
+    name-color: "&e"
+    priority: 30
+  vip:
+    display: "&e&lVIP"
+    prefix: "&e&l✦ VIP &e"
+    tab-prefix: "&e&l✦ "
+    name-color: "&e"
+    priority: 20
+  gracz:
+    display: "&7GRACZ"
+    prefix: "&7GRACZ &7"
+    tab-prefix: "&7"
+    name-color: "&7"
+    priority: 0
+
+sidebar:
+  enabled: true
+  title: "&6&lMSURVIVAL"
+  lines:
+    - "&8&m----------------"
+    - "&fNick: &e%player%"
+    - "&fRanga: %rank%"
+    - "&fWygasa: &e%expires%"
+    - ""
+    - "&fOnline: &a%online%"
+    - "&fPing: &a%ping%ms"
+    - "&fŚwiat: &a%world%"
+    - "&8&m----------------"
+    - "&6msurvival.6mc.pl"
+
+messages:
+  prefix: "&6&lMSurvival &8» &r"
+  no-permission: "&cNie masz uprawnień."
+  reload: "&aPrzeładowano config."
+  lobby: "&aPrzeniesiono do lobby."
+  survival: "&aPrzeniesiono na survival."
+  lobby-set: "&aUstawiono lobby."
+  survival-set: "&aUstawiono survival."
+  no-key: "&cNie masz wymaganego klucza: &e%key%"
+  opened: "&aOtworzono kit: &e%kit%"
+  claimed: "&aOdebrałeś klucz: &e%key%"
+  cooldown: "&cNagroda dostępna za: &e%time%"
+  withdrawn: "&aWyjęto klucz: &e%key%"
+  key-right-click-disabled: "&cKlucza nie otwierasz PPM. Użyj &e/kits&c."
+  rank-set: "&aUstawiono rangę %rank% &adla &e%player%&a."
+  rank-temp: "&aUstawiono rangę %rank% &adla &e%player% &ana &e%time%&a."
+  rank-remove: "&aUsunięto rangę gracza &e%player%&a."
+  daily-claimed: "&aOdebrałeś dzienną nagrodę."
+  banned: "&cZbanowano &e%player%&c. Powód: &e%reason%"
+  unbanned: "&aOdbanowano &e%player%&a."
+  warned: "&eOstrzeżono &6%player%&e."
+  vanish-on: "&aVanish włączony."
+  vanish-off: "&cVanish wyłączony."

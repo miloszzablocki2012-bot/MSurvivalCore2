@@ -1,0 +1,92 @@
+name: MSurvivalCore
+version: 2.0
+main: pl.msurvival.core.MSurvivalCore
+api-version: '1.21'
+author: Milekz
+
+commands:
+  menu:
+    usage: /menu
+  lobby:
+    usage: /lobby
+    aliases: [hub]
+  survival:
+    usage: /survival
+  setlobby:
+    usage: /setlobby
+  setsurvival:
+    usage: /setsurvival
+  keysmenu:
+    usage: /keysmenu
+  kits:
+    usage: /kits
+  daily:
+    usage: /daily
+  pomoc:
+    usage: /pomoc
+  komendy:
+    usage: /komendy
+  sklep:
+    usage: /sklep
+  discord:
+    usage: /discord
+  keyadmin:
+    usage: /keyadmin <give|item|reset|reload> <gracz> <klucz> [ilosc]
+  setrank:
+    usage: /setrank <gracz> <ranga>
+  temprank:
+    usage: /temprank <gracz> <ranga> <czas>
+  setranktemp:
+    usage: /setranktemp <gracz> <ranga> <czas>
+  rankremove:
+    usage: /rankremove <gracz>
+  ranks:
+    usage: /ranks
+  rank:
+    usage: /rank [gracz]
+  vanish:
+    usage: /vanish
+    aliases: [v]
+  fly:
+    usage: /fly
+  gm:
+    usage: /gm <0|1|2|3>
+  heal:
+    usage: /heal [gracz]
+  feed:
+    usage: /feed [gracz]
+  invsee:
+    usage: /invsee <gracz>
+  ecsee:
+    usage: /ecsee <gracz>
+  staffchat:
+    usage: /staffchat <tekst>
+    aliases: [sc]
+  freeze:
+    usage: /freeze <gracz>
+  unfreeze:
+    usage: /unfreeze <gracz>
+  msban:
+    usage: /msban <gracz> <powod>
+  msunban:
+    usage: /msunban <gracz>
+  mskick:
+    usage: /mskick <gracz> <powod>
+  mswarn:
+    usage: /mswarn <gracz> <powod>
+  register:
+    usage: /register <haslo>
+  login:
+    usage: /login <haslo>
+  core:
+    usage: /core reload
+
+permissions:
+  msurvival.admin:
+    default: op
+  msurvival.ranks:
+    default: op
+  msurvival.keys:
+    default: op
+  msurvival.bans:
+    default: op
