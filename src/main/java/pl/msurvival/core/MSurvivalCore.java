@@ -63,8 +63,19 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         cmd("kits", (s,a)->{ if(s instanceof Player p) openKitsMenu(p); });
         cmd("daily", (s,a)->{ if(s instanceof Player p) daily(p); });
         cmd("pomoc", (s,a)-> sendHelp(s));
-        cmd("komendy", (s,a)-> sendHelp(s));
-        cmd("sklep", (s,a)-> s.sendMessage(color("&6&lSklep &8» &e" + getConfig().getString("server.shop"))));
+        cmd("komendy", (s,a)-> sendConfigLines(s, "info.komendy"));
+        cmd("regulamin", (s,a)-> sendConfigLines(s, "info.regulamin"));
+        cmd("rules", (s,a)-> sendConfigLines(s, "info.regulamin"));
+        cmd("social", (s,a)-> sendConfigLines(s, "info.social"));
+        cmd("fanpage", (s,a)-> sendConfigLines(s, "info.social"));
+        cmd("tiktok", (s,a)-> sendConfigLines(s, "info.social"));
+        cmd("youtube", (s,a)-> sendConfigLines(s, "info.social"));
+        cmd("rangi", (s,a)-> sendConfigLines(s, "info.rangi"));
+        cmd("vip", (s,a)-> sendConfigLines(s, "info.rangi"));
+        cmd("klucze", (s,a)-> sendConfigLines(s, "info.klucze"));
+        cmd("start", (s,a)-> sendConfigLines(s, "welcome-book.lines"));
+        cmd("donate", (s,a)-> sendConfigLines(s, "info.donate"));
+        cmd("wsparcie", (s,a)-> sendConfigLines(s, "info.donate"));
         cmd("discord", (s,a)-> s.sendMessage(color("&9&lDiscord &8» &b" + getConfig().getString("server.discord"))));
         cmd("core", (s,a)->{ if(!s.hasPermission("msurvival.admin")) { s.sendMessage(msg("no-permission")); return; } reloadConfig(); s.sendMessage(msg("reload")); });
 
@@ -188,6 +199,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
 
     private void welcome(Player p) {
         p.sendTitle(color(getConfig().getString("welcome.title")).replace("%player%",p.getName()), color(getConfig().getString("welcome.subtitle")).replace("%player%",p.getName()), 10, 60, 10);
+        if(getConfig().getBoolean("welcome-book.send-on-join", true)) sendConfigLines(p, "welcome-book.lines");
         BossBar bar=Bukkit.createBossBar(color(getConfig().getString("welcome.bossbar")).replace("%player%",p.getName()), BarColor.YELLOW, BarStyle.SOLID);
         bar.addPlayer(p);
         Bukkit.getScheduler().runTaskLater(this, bar::removeAll, 160L);
@@ -528,6 +540,24 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         ConfigurationSection cs=getConfig().getConfigurationSection("ranks");
         if(cs==null) return;
         for(String r:cs.getKeys(false)) s.sendMessage(color("&8- &e"+r+" &7=> "+getConfig().getString("ranks."+r+".prefix")));
+    }
+
+    private void sendConfigLines(org.bukkit.command.CommandSender s, String path) {
+        for(String line : getConfig().getStringList(path)) {
+            String out = line;
+            if(s instanceof Player p) {
+                out = out.replace("%player%", p.getName())
+                         .replace("%rank%", module("ranks") ? rankDisplay(getRank(p)) : "")
+                         .replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()))
+                         .replace("%ping%", String.valueOf(p.getPing()))
+                         .replace("%world%", p.getWorld().getName());
+            }
+            out = out.replace("%ip%", getConfig().getString("server.ip", "msurvival.6mc.pl"))
+                     .replace("%shop%", getConfig().getString("server.shop", ""))
+                     .replace("%donate%", getConfig().getString("server.donate", "https://tipply.pl/@milekz"))
+                     .replace("%discord%", getConfig().getString("server.discord", ""));
+            s.sendMessage(color(out));
+        }
     }
 
     private void sendHelp(org.bukkit.command.CommandSender s) {

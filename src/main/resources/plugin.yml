@@ -1,5 +1,5 @@
 name: MSurvivalCore
-version: 2.0
+version: 2.4
 main: pl.msurvival.core.MSurvivalCore
 api-version: '1.21'
 author: Milekz
@@ -26,8 +26,10 @@ commands:
     usage: /pomoc
   komendy:
     usage: /komendy
-  sklep:
-    usage: /sklep
+  donate:
+    usage: /donate
+  wsparcie:
+    usage: /wsparcie
   discord:
     usage: /discord
   keyadmin:
@@ -78,6 +80,26 @@ commands:
     usage: /register <haslo>
   login:
     usage: /login <haslo>
+  regulamin:
+    usage: /regulamin
+  rules:
+    usage: /rules
+  social:
+    usage: /social
+  fanpage:
+    usage: /fanpage
+  tiktok:
+    usage: /tiktok
+  youtube:
+    usage: /youtube
+  vip:
+    usage: /vip
+  rangi:
+    usage: /rangi
+  klucze:
+    usage: /klucze
+  start:
+    usage: /start
   core:
     usage: /core reload
 
