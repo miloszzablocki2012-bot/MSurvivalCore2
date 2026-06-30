@@ -1,8 +1,9 @@
 name: MSurvivalCore
-version: 2.6
+version: 3.0
 main: pl.msurvival.core.MSurvivalCore
 api-version: '1.21'
 author: Milekz
+softdepend: [Multiverse-Core]
 
 commands:
   menu:
@@ -18,8 +19,12 @@ commands:
     usage: /setsurvival
   keysmenu:
     usage: /keysmenu
+  key:
+    usage: /key
+    aliases: [keys, klucze]
   kits:
     usage: /kits
+    aliases: [ekit, ekits, kit]
   daily:
     usage: /daily
   pomoc:
@@ -100,6 +105,12 @@ commands:
     usage: /klucze
   start:
     usage: /start
+  authbypass:
+    usage: /authbypass <add|remove|list> [gracz]
+  changepassword:
+    usage: /changepassword <stare> <nowe>
+  resetpassword:
+    usage: /resetpassword <gracz>
   core:
     usage: /core reload
 

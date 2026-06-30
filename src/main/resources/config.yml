@@ -1,18 +1,31 @@
 modules:
   welcome: true
   lobby: true
-  inventory: true
+  inventory: false
   keys: true
   ranks: true
   admin: true
   bans: true
-  auth: false
+  auth: true
 
 server:
   ip: "msurvival.6mc.pl"
   shop: ""
   donate: "https://tipply.pl/@milekz"
   discord: "Link do Discorda znajdziesz na kanale YouTube Milekz"
+
+auth:
+  enabled: true
+  force-lobby-on-join: true
+  login-timeout-seconds: 60
+  session-seconds: 300
+  bypass-players:
+    - 'Milekz21'
+
+multiverse-core:
+  enabled: true
+  use-multiverse-teleport: true
+  note: "Używamy tylko Multiverse-Core. Nie używamy Multiverse-Inventories."
 
 settings:
   autosave-seconds: 20
@@ -59,8 +72,8 @@ menu-item:
 
 gui:
   menu-title: "&6&lMSURVIVAL MENU"
-  keys-title: "&6&lTWOJE KLUCZE"
-  kits-title: "&b&lKITY ZA KLUCZE"
+  keys-title: "&6&lKLUCZE SERWERA"
+  kits-title: "&b&lEKITY ZA KLUCZE"
   filler: BLACK_STAINED_GLASS_PANE
 
 welcome:
@@ -259,18 +272,18 @@ weekly:
 
 key-item:
   material: TRIPWIRE_HOOK
-  name: "&6&l✦ %key_name% &6&l✦"
+  name: '&6&l✦ %key_name% &6&l✦'
   lore:
-    - "&8━━━━━━━━━━━━━━━━"
-    - "&7Typ klucza: &f%key_name%"
-    - "&7Przedmiot: &eZaczep na linkę"
-    - ""
-    - "&7To jest przepustka do kitu."
-    - "&eOtwórz &b/kits&e i wybierz kit."
-    - ""
-    - "&6MSurvival.pl"
-    - "&8━━━━━━━━━━━━━━━━"
-
+    - '&8━━━━━━━━━━━━━━━━'
+    - '&7Typ: %key_name%'
+    - '&7Przedmiot: &eZaczep na linkę'
+    - ''
+    - '&fTo jest klucz do &bE-Kita&f.'
+    - '&cNie klikaj PPM.'
+    - '&7Wejdź na &aSurvival &7i użyj &e/kits&7.'
+    - ''
+    - '&6&lMSURVIVAL'
+    - '&8━━━━━━━━━━━━━━━━'
 keys:
   klasyczny:
     display: "&f&lKlucz Klasyczny"
@@ -291,27 +304,27 @@ kits:
   klasyczny:
     slot: 10
     material: STONE_PICKAXE
-    name: "&f&lKit Klasyczny"
+    name: "&f&lE-Kit Klasyczny"
     required-key: klasyczny
   zelazny:
     slot: 11
     material: IRON_CHESTPLATE
-    name: "&7&lKit Żelazny"
+    name: "&7&lE-Kit Żelazny"
     required-key: zelazny
   diamentowy:
     slot: 12
     material: DIAMOND_CHESTPLATE
-    name: "&b&lKit Diamentowy"
+    name: "&b&lE-Kit Diamentowy"
     required-key: diamentowy
   epic:
     slot: 13
     material: DIAMOND_SWORD
-    name: "&5&lKit Epic"
+    name: "&5&lE-Kit Epic"
     required-key: epic
   legendarny:
     slot: 14
     material: NETHERITE_CHESTPLATE
-    name: "&6&lKit Legendarny"
+    name: "&6&lE-Kit Legendarny"
     required-key: legendarny
     random-rewards:
       legendarny: 80
@@ -320,7 +333,7 @@ kits:
   mityczny:
     slot: 15
     material: NETHER_STAR
-    name: "&d&lKit Mityczny"
+    name: "&d&lE-Kit Mityczny"
     required-key: mityczny
     random-rewards:
       mityczny: 80
@@ -328,7 +341,7 @@ kits:
   boski:
     slot: 16
     material: DRAGON_EGG
-    name: "&4&lKit Boski"
+    name: "&4&lE-Kit Boski"
     required-key: boski
 
 ranks:
@@ -417,6 +430,19 @@ sidebar:
     - '&fmsurvival.6mc.pl'
     - '&8&m━━━━━━━━━━━━'
 messages:
+  inventory-disabled-note: "&7Zapis itemów nie jest obsługiwany przez MSurvivalCore."
+  auth-register: "&eZarejestruj konto: &6/register <hasło>"
+  auth-login: "&eZaloguj się: &6/login <hasło>"
+  auth-registered: "&aZarejestrowano i zalogowano."
+  auth-logged: "&aZalogowano."
+  auth-wrong: "&cBłędne hasło."
+  auth-already: "&cJesteś już zalogowany."
+  auth-timeout: "&cNie zalogowałeś się na czas."
+  auth-blocked: "&cNajpierw się zaloguj: &e/login <hasło>"
+  auth-bypass-added: "&aWyłączono weryfikację dla gracza &e%player%&a."
+  auth-bypass-removed: "&aWłączono weryfikację dla gracza &e%player%&a."
+  auth-password-changed: "&aHasło zostało zmienione."
+  auth-password-reset: "&aZresetowano hasło gracza &e%player%&a."
   prefix: "&6&lMSurvival &8» &r"
   no-permission: "&cNie masz uprawnień."
   reload: "&aPrzeładowano config."
@@ -424,12 +450,13 @@ messages:
   survival: "&aPrzeniesiono na survival."
   lobby-set: "&aUstawiono lobby."
   survival-set: "&aUstawiono survival."
-  no-key: "&cNie masz wymaganego klucza: &e%key%"
-  opened: "&aOtworzono kit: &e%kit%"
-  claimed: "&aOdebrałeś klucz: &e%key%"
+  no-key: "&c✘ Nie masz wymaganego klucza: %key%"
+  opened: "&a✔ Otworzono kit: &e%kit%"
+  claimed: "&a✔ Odebrałeś klucz: %key%"
   cooldown: "&cNagroda dostępna za: &e%time%"
-  withdrawn: "&aWyjęto klucz: &e%key%"
-  key-right-click-disabled: "&cKlucza nie otwierasz PPM. Wejdź na &aSurvival&c i użyj &e/kits&c."
+  withdrawn: "&a✔ Wyjęto klucz: %key%"
+  key-right-click-disabled: "&c✘ Tego klucza nie otwiera się PPM. Wejdź na &aSurvival &ci użyj &e/kits&c."
+  kit-lobby-blocked: "&c✘ E-Kity odbierasz tylko na &aSurvivalu&c. Lobby ma osobny ekwipunek."
   keys-lobby-blocked: "&cKlucze i kity odbieraj dopiero na &aSurvivalu&c. Lobby ma osobny ekwipunek."
   rank-set: "&aUstawiono rangę %rank% &adla &e%player%&a."
   rank-temp: "&aUstawiono rangę %rank% &adla &e%player% &ana &e%time%&a."

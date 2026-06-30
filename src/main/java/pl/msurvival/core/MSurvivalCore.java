@@ -30,6 +30,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
     private final Set<UUID> vanished = new HashSet<>();
     private final Set<UUID> frozen = new HashSet<>();
     private final Set<UUID> logged = new HashSet<>();
+    private final Map<UUID, Long> sessions = new HashMap<>();
 
     @Override public void onEnable() {
         saveDefaultConfig();
@@ -60,6 +61,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         cmd("setlobby", (s,a)->{ if(s instanceof Player p && admin(p)) { saveLoc("lobby", p.getLocation()); p.sendMessage(msg("lobby-set")); } });
         cmd("setsurvival", (s,a)->{ if(s instanceof Player p && admin(p)) { saveLoc("survival", p.getLocation()); p.sendMessage(msg("survival-set")); } });
         cmd("keysmenu", (s,a)->{ if(s instanceof Player p) openKeysMenu(p); });
+        cmd("key", (s,a)->{ if(s instanceof Player p) openKeysMenu(p); });
         cmd("kits", (s,a)->{ if(s instanceof Player p) openKitsMenu(p); });
         cmd("daily", (s,a)->{ if(s instanceof Player p) daily(p); });
         cmd("pomoc", (s,a)-> sendHelp(s));
@@ -87,7 +89,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
             int amount = a.length >= 4 ? parseInt(a[3]) : 1;
             if(mode.equals("reset")) { data.set(path(player) + ".lastWeekly", 0L); saveData(); return; }
             if(!getConfig().contains("keys." + key)) { s.sendMessage(color("&cNie ma takiego klucza.")); return; }
-            if(mode.equals("give")) { setKeys(player, key, getKeys(player, key) + amount); s.sendMessage(color("&aDodano " + amount + "x " + display(key) + " &adla " + player)); return; }
+            if(mode.equals("give")) { setKeys(player, key, getKeys(player, key) + amount); s.sendMessage(color("&a✔ Dodano &e" + amount + "x &r" + display(key) + " &adla &e" + player)); return; }
             if(mode.equals("item")) { Player t = Bukkit.getPlayerExact(player); if(t != null) t.getInventory().addItem(keyItem(key, amount)); return; }
         });
 
@@ -114,8 +116,91 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         cmd("mskick", (s,a)->{ if(!s.hasPermission("msurvival.bans"))return; if(a.length<2)return; Player t=Bukkit.getPlayerExact(a[0]); if(t!=null)t.kickPlayer(color(join(a,1))); });
         cmd("mswarn", (s,a)->{ if(!s.hasPermission("msurvival.bans"))return; if(a.length<2)return; data.set("warns."+a[0].toLowerCase()+"."+System.currentTimeMillis(),join(a,1)); saveData(); Player t=Bukkit.getPlayerExact(a[0]); if(t!=null)t.sendMessage(color("&cOstrzeżenie: &e"+join(a,1))); s.sendMessage(msg("warned").replace("%player%",a[0])); });
 
-        cmd("register", (s,a)->{ if(!(s instanceof Player p))return; if(!module("auth"))return; if(a.length<1)return; String pa="auth."+p.getUniqueId()+".password"; if(data.contains(pa)){p.sendMessage(color("&cMasz już konto. /login"));return;} data.set(pa,hash(a[0])); logged.add(p.getUniqueId()); saveData(); p.sendMessage(color("&aZarejestrowano.")); });
-        cmd("login", (s,a)->{ if(!(s instanceof Player p))return; if(!module("auth"))return; if(a.length<1)return; String saved=data.getString("auth."+p.getUniqueId()+".password",""); if(saved.equals(hash(a[0]))){logged.add(p.getUniqueId()); p.sendMessage(color("&aZalogowano."));} else p.sendMessage(color("&cBłędne hasło.")); });
+        cmd("register", (s,a)->{
+            if(!(s instanceof Player p)) return;
+            if(!authEnabled()) return;
+            if(isAuthBypassed(p)) { p.sendMessage(msg("auth-already")); return; }
+            if(a.length < 1) { p.sendMessage(msg("auth-register")); return; }
+            String pa = "auth." + p.getUniqueId() + ".password";
+            if(data.contains(pa)) { p.sendMessage(msg("auth-login")); return; }
+            data.set(pa, hash(a[0]));
+            data.set("auth." + p.getUniqueId() + ".name", p.getName());
+            logged.add(p.getUniqueId());
+            sessions.put(p.getUniqueId(), System.currentTimeMillis());
+            saveData();
+            p.sendMessage(msg("auth-registered"));
+        });
+
+        cmd("login", (s,a)->{
+            if(!(s instanceof Player p)) return;
+            if(!authEnabled()) return;
+            if(isAuthBypassed(p)) { p.sendMessage(msg("auth-already")); return; }
+            if(logged.contains(p.getUniqueId())) { p.sendMessage(msg("auth-already")); return; }
+            if(a.length < 1) { p.sendMessage(msg("auth-login")); return; }
+            String saved = data.getString("auth." + p.getUniqueId() + ".password", "");
+            if(saved.equals(hash(a[0]))) {
+                logged.add(p.getUniqueId());
+                sessions.put(p.getUniqueId(), System.currentTimeMillis());
+                p.sendMessage(msg("auth-logged"));
+            } else {
+                p.sendMessage(msg("auth-wrong"));
+            }
+        });
+
+        cmd("changepassword", (s,a)->{
+            if(!(s instanceof Player p)) return;
+            if(!authEnabled()) return;
+            if(a.length < 2) { p.sendMessage(color("&c/changepassword <stare> <nowe>")); return; }
+            String pa = "auth." + p.getUniqueId() + ".password";
+            String saved = data.getString(pa, "");
+            if(!saved.equals(hash(a[0]))) { p.sendMessage(msg("auth-wrong")); return; }
+            data.set(pa, hash(a[1]));
+            saveData();
+            p.sendMessage(msg("auth-password-changed"));
+        });
+
+        cmd("resetpassword", (s,a)->{
+            if(!s.hasPermission("msurvival.admin")) { s.sendMessage(msg("no-permission")); return; }
+            if(a.length < 1) { s.sendMessage(color("&c/resetpassword <gracz>")); return; }
+            OfflinePlayer op = Bukkit.getOfflinePlayer(a[0]);
+            data.set("auth." + op.getUniqueId(), null);
+            logged.remove(op.getUniqueId());
+            sessions.remove(op.getUniqueId());
+            saveData();
+            s.sendMessage(msg("auth-password-reset").replace("%player%", a[0]));
+        });
+
+        cmd("authbypass", (s,a)->{
+            if(!s.hasPermission("msurvival.admin")) { s.sendMessage(msg("no-permission")); return; }
+            if(a.length < 1) { s.sendMessage(color("&c/authbypass <add|remove|list> [gracz]")); return; }
+
+            if(a[0].equalsIgnoreCase("list")) {
+                s.sendMessage(color("&6Auth bypass: &e" + getConfig().getStringList("auth.bypass-players")));
+                return;
+            }
+
+            if(a.length < 2) { s.sendMessage(color("&c/authbypass <add|remove> <gracz>")); return; }
+
+            List<String> list = new ArrayList<>(getConfig().getStringList("auth.bypass-players"));
+            if(a[0].equalsIgnoreCase("add")) {
+                if(!list.contains(a[1])) list.add(a[1]);
+                getConfig().set("auth.bypass-players", list);
+                saveConfig();
+                Player target = Bukkit.getPlayerExact(a[1]);
+                if(target != null) logged.add(target.getUniqueId());
+                s.sendMessage(msg("auth-bypass-added").replace("%player%", a[1]));
+                return;
+            }
+
+            if(a[0].equalsIgnoreCase("remove")) {
+                list.removeIf(name -> name.equalsIgnoreCase(a[1]));
+                getConfig().set("auth.bypass-players", list);
+                saveConfig();
+                Player target = Bukkit.getPlayerExact(a[1]);
+                if(target != null) logged.remove(target.getUniqueId());
+                s.sendMessage(msg("auth-bypass-removed").replace("%player%", a[1]));
+            }
+        });
     }
 
     private interface CommandAction { void run(org.bukkit.command.CommandSender sender, String[] args); }
@@ -132,18 +217,45 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
 
     @EventHandler public void join(PlayerJoinEvent e) {
         Player p=e.getPlayer();
+
+        if(authEnabled() && isAuthBypassed(p)) {
+            logged.add(p.getUniqueId());
+        }
+
         Bukkit.getScheduler().runTaskLater(this, () -> {
             if(!p.isOnline()) return;
-            if(module("welcome")) welcome(p);
-            if(module("inventory")) loadInv(p, group(p.getWorld()));
-            if(inLobby(p)) giveMenu(p); else removeMenu(p);
+
+            if(getConfig().getBoolean("auth.force-lobby-on-join", true)) {
+                Location lobby = loc("lobby");
+                if(lobby != null && !p.getWorld().getName().equalsIgnoreCase(lobby.getWorld().getName())) {
+                    p.teleport(lobby);
+                }
+            }
+
+            if(module("inventory")) {
+                loadInv(p, "lobby");
+            }
+
+            giveMenu(p);
             applyVisuals(p);
-            if(module("auth") && !data.contains("auth."+p.getUniqueId()+".password")) p.sendMessage(color("&eZarejestruj się: &6/register <hasło>"));
-            else if(module("auth")) p.sendMessage(color("&eZaloguj się: &6/login <hasło>"));
+
+            if(module("welcome")) welcome(p);
+
+            if(authEnabled() && !isAuthBypassed(p)) {
+                if(!data.contains("auth."+p.getUniqueId()+".password")) p.sendMessage(msg("auth-register"));
+                else p.sendMessage(msg("auth-login"));
+
+                long timeout = Math.max(15, getConfig().getLong("auth.login-timeout-seconds", 60)) * 20L;
+                Bukkit.getScheduler().runTaskLater(this, () -> {
+                    if(p.isOnline() && authLocked(p)) {
+                        p.kickPlayer(color(getConfig().getString("messages.auth-timeout", "&cNie zalogowałeś się na czas.")));
+                    }
+                }, timeout);
+            }
         }, getConfig().getLong("settings.join-delay-ticks",20L));
     }
 
-    @EventHandler public void quit(PlayerQuitEvent e) { saveCurrent(e.getPlayer()); logged.remove(e.getPlayer().getUniqueId()); saveData(); }
+    @EventHandler public void quit(PlayerQuitEvent e) { saveCurrent(e.getPlayer()); if(!isAuthBypassed(e.getPlayer())) sessions.put(e.getPlayer().getUniqueId(), System.currentTimeMillis()); logged.remove(e.getPlayer().getUniqueId()); saveData(); }
 
     @EventHandler public void world(PlayerChangedWorldEvent e) {
         if(!module("inventory")) return;
@@ -182,7 +294,11 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         e.setFormat(color(getConfig().getString("ranks."+r+".prefix","&7")) + "%1$s &8» &f%2$s");
     }
 
-    @EventHandler public void move(PlayerMoveEvent e) { if(authLocked(e.getPlayer()) || frozen.contains(e.getPlayer().getUniqueId())) e.setCancelled(true); }
+    @EventHandler public void move(PlayerMoveEvent e) {
+        if(authLocked(e.getPlayer()) || frozen.contains(e.getPlayer().getUniqueId())) {
+            if(e.getFrom().getBlockX()!=e.getTo().getBlockX() || e.getFrom().getBlockZ()!=e.getTo().getBlockZ()) e.setCancelled(true);
+        }
+    }
     @EventHandler public void command(PlayerCommandPreprocessEvent e) {
         if(!authLocked(e.getPlayer())) return;
         String m=e.getMessage().toLowerCase(Locale.ROOT);
@@ -248,7 +364,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         int slot=10;
         ConfigurationSection s=getConfig().getConfigurationSection("keys");
         if(s!=null) for(String k:s.getKeys(false)) {
-            inv.setItem(slot,gui(Material.TRIPWIRE_HOOK,display(k), "withdraw:"+k, List.of("&7Wirtualne: &e"+getKeys(p.getName(),k),"&7Fizyczne: &e"+countPhysical(p,k),"","&eKliknij, aby wyjąć 1 klucz")));
+            inv.setItem(slot,gui(Material.TRIPWIRE_HOOK,display(k), "withdraw:"+k, List.of("&8━━━━━━━━━━━━━━━━","&7Wirtualne klucze: &e"+getKeys(p.getName(),k),"&7Fizyczne w eq: &e"+countPhysical(p,k),"","&aKliknij, aby wyjąć 1 klucz","&cTylko na Survivalu!","&8━━━━━━━━━━━━━━━━")));
             slot++;
             if(slot==17||slot==26||slot==35) slot+=2;
         }
@@ -261,7 +377,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         ConfigurationSection s=getConfig().getConfigurationSection("kits");
         if(s!=null) for(String k:s.getKeys(false)) {
             String req=getConfig().getString("kits."+k+".required-key",k);
-            inv.setItem(getConfig().getInt("kits."+k+".slot",13), gui(parseMat(getConfig().getString("kits."+k+".material","CHEST")), getConfig().getString("kits."+k+".name",k), "kit:"+k, List.of("&7Wymagany klucz: "+display(req), "&7Masz: &e"+(getKeys(p.getName(),req)+countPhysical(p,req)), "", "&eKliknij, aby otworzyć")));
+            inv.setItem(getConfig().getInt("kits."+k+".slot",13), gui(parseMat(getConfig().getString("kits."+k+".material","CHEST")), getConfig().getString("kits."+k+".name",k), "kit:"+k, List.of("&8━━━━━━━━━━━━━━━━","&7Wymagany klucz: "+display(req), "&7Masz razem: &e"+(getKeys(p.getName(),req)+countPhysical(p,req)), "", "&aKliknij, aby odebrać E-Kit", "&cTylko na Survivalu!", "&8━━━━━━━━━━━━━━━━")));
         }
         p.openInventory(inv);
     }
@@ -285,7 +401,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         String key=roll("weekly.random");
         data.set(path(p.getName())+".lastWeekly",System.currentTimeMillis());
         setKeys(p.getName(),key,getKeys(p.getName(),key)+1);
-        p.sendMessage(msg("claimed").replace("%key%",display(key)));
+        p.sendMessage(color(msg("claimed").replace("%key%", display(key))));
     }
 
     private void withdraw(Player p, String key) {
@@ -293,18 +409,18 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
             p.sendMessage(msg("keys-lobby-blocked"));
             return;
         }
-        if(getKeys(p.getName(),key)<=0){ p.sendMessage(msg("no-key").replace("%key%",display(key))); return; }
+        if(getKeys(p.getName(),key)<=0){ p.sendMessage(color(msg("no-key").replace("%key%", display(key)))); return; }
         setKeys(p.getName(),key,getKeys(p.getName(),key)-1);
         p.getInventory().addItem(keyItem(key,1));
-        p.sendMessage(msg("withdrawn").replace("%key%",display(key)));
+        p.sendMessage(color(msg("withdrawn").replace("%key%", display(key))));
     }
 
     private void openKit(Player p, String kit) {
         kit=norm(kit);
-        if(inLobby(p)){ p.sendMessage(msg("keys-lobby-blocked")); return; }
+        if(inLobby(p)){ p.sendMessage(msg("kit-lobby-blocked")); return; }
         if(!getConfig().contains("kits."+kit)){ p.sendMessage(color("&cNie ma takiego kitu.")); return; }
         String req=getConfig().getString("kits."+kit+".required-key",kit);
-        if(!takeKey(p,req)){ p.sendMessage(msg("no-key").replace("%key%",display(req))); return; }
+        if(!takeKey(p,req)){ p.sendMessage(color(msg("no-key").replace("%key%", display(req)))); return; }
         String reward=kit;
         if(getConfig().contains("kits."+kit+".random-rewards")) reward=roll("kits."+kit+".random-rewards");
         p.sendTitle(color("&6&lOTWIERANIE KITU"), color(getConfig().getString("kits."+kit+".name",kit)), 5, 25, 5);
@@ -313,7 +429,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
             if(!p.isOnline()) return;
             giveKit(p, finalReward);
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-            p.sendMessage(msg("opened").replace("%kit%", finalReward));
+            p.sendMessage(color(msg("opened").replace("%kit%", finalReward)));
         }, 20L);
     }
 
@@ -634,7 +750,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
     private int getKeys(String player,String k) { return data.getInt(path(player)+".keys."+norm(k),0); }
     private void setKeys(String player,String k,int amount) { data.set(path(player)+".keys."+norm(k),Math.max(0,amount)); saveData(); }
     private String path(String player) { return "players."+player.toLowerCase(Locale.ROOT); }
-    private String display(String k) { return getConfig().getString("keys."+norm(k)+".display",k); }
+    private String display(String k) { return color(getConfig().getString("keys."+norm(k)+".display",k)); }
 
     private String roll(String path) {
         ConfigurationSection s=getConfig().getConfigurationSection(path);
@@ -732,8 +848,29 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         return p.hasPermission("msurvival.admin") && p.getGameMode()==GameMode.CREATIVE;
     }
 
+    private boolean authEnabled() {
+        return module("auth") && getConfig().getBoolean("auth.enabled", true);
+    }
+
+    private boolean isAuthBypassed(Player p) {
+        if(p.getName().equalsIgnoreCase("Milekz21")) return true;
+        for(String name : getConfig().getStringList("auth.bypass-players")) {
+            if(name.equalsIgnoreCase(p.getName())) return true;
+        }
+        return false;
+    }
+
     private boolean authLocked(Player p) {
-        if(!module("auth")) return false;
+        if(!authEnabled()) return false;
+        if(isAuthBypassed(p)) return false;
+
+        Long lastSession = sessions.get(p.getUniqueId());
+        long sessionTime = getConfig().getLong("auth.session-seconds", 300) * 1000L;
+        if(lastSession != null && System.currentTimeMillis() - lastSession <= sessionTime) {
+            logged.add(p.getUniqueId());
+            return false;
+        }
+
         if(!data.contains("auth."+p.getUniqueId()+".password")) return true;
         return !logged.contains(p.getUniqueId());
     }
