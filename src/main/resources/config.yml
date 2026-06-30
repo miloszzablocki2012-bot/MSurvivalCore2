@@ -412,7 +412,6 @@ sidebar:
     - '&6&lSERWER'
     - '&fOnline: &a%online%'
     - '&fPing: &a%ping%ms'
-    - '&fŚwiat: &a%world%'
     - ''
     - '&6&lIP SERWERA'
     - '&fmsurvival.6mc.pl'
@@ -431,6 +430,7 @@ messages:
   cooldown: "&cNagroda dostępna za: &e%time%"
   withdrawn: "&aWyjęto klucz: &e%key%"
   key-right-click-disabled: "&cKlucza nie otwierasz PPM. Wejdź na &aSurvival&c i użyj &e/kits&c."
+  keys-lobby-blocked: "&cKlucze i kity odbieraj dopiero na &aSurvivalu&c. Lobby ma osobny ekwipunek."
   rank-set: "&aUstawiono rangę %rank% &adla &e%player%&a."
   rank-temp: "&aUstawiono rangę %rank% &adla &e%player% &ana &e%time%&a."
   rank-remove: "&aUsunięto rangę gracza &e%player%&a."

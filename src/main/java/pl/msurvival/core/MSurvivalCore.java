@@ -290,7 +290,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
 
     private void withdraw(Player p, String key) {
         if(inLobby(p)) {
-            p.sendMessage(color("&cKlucze fizyczne wyjmuj dopiero na &aSurvivalu&c. Lobby ma osobny ekwipunek, więc przedmiot mógłby zniknąć po zmianie świata."));
+            p.sendMessage(msg("keys-lobby-blocked"));
             return;
         }
         if(getKeys(p.getName(),key)<=0){ p.sendMessage(msg("no-key").replace("%key%",display(key))); return; }
@@ -301,7 +301,7 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
 
     private void openKit(Player p, String kit) {
         kit=norm(kit);
-        if(inLobby(p)){ p.sendMessage(color("&cKity otwieraj na survivalu.")); return; }
+        if(inLobby(p)){ p.sendMessage(msg("keys-lobby-blocked")); return; }
         if(!getConfig().contains("kits."+kit)){ p.sendMessage(color("&cNie ma takiego kitu.")); return; }
         String req=getConfig().getString("kits."+kit+".required-key",kit);
         if(!takeKey(p,req)){ p.sendMessage(msg("no-key").replace("%key%",display(req))); return; }
@@ -393,22 +393,31 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
 
     private void toLobby(Player p, boolean send) {
         if(module("inventory")) saveInv(p, group(p.getWorld()));
-        if(module("inventory")) loadInv(p, "lobby");
         Location loc=loc("lobby");
         if(loc!=null) p.teleport(loc);
-        giveMenu(p);
-        p.setFoodLevel(20);
-        p.setSaturation(20f);
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            if(!p.isOnline()) return;
+            if(module("inventory")) loadInv(p, "lobby");
+            giveMenu(p);
+            p.setFoodLevel(20);
+            p.setSaturation(20f);
+        }, 2L);
+
         if(send) p.sendMessage(msg("lobby"));
     }
 
     private void toSurvival(Player p, boolean send) {
         if(module("inventory")) saveInv(p, group(p.getWorld()));
-        if(module("inventory")) loadInv(p, "survival");
         removeMenu(p);
         Location loc = getConfig().getBoolean("survival.use-bed-spawn") ? p.getBedSpawnLocation() : null;
         if(loc==null) loc=loc("survival");
         if(loc!=null) p.teleport(loc);
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            if(p.isOnline() && module("inventory")) loadInv(p, "survival");
+        }, 2L);
+
         if(send) p.sendMessage(msg("survival"));
     }
 
@@ -516,7 +525,13 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
         int score=lines.size();
         Set<String> used=new HashSet<>();
         for(String raw:lines) {
-            String line=color(raw.replace("%player%",p.getName()).replace("%rank%",rankDisplay(getRank(p))).replace("%expires%",expires(p)).replace("%online%",String.valueOf(Bukkit.getOnlinePlayers().size())).replace("%ping%",String.valueOf(p.getPing())).replace("%world%",p.getWorld().getName()));
+            String expiresText = expires(p);
+            if(raw.contains("%expires%") && expiresText.equalsIgnoreCase("nigdy")) {
+                score--;
+                continue;
+            }
+
+            String line=color(raw.replace("%player%",p.getName()).replace("%rank%",rankDisplay(getRank(p))).replace("%expires%",expiresText).replace("%online%",String.valueOf(Bukkit.getOnlinePlayers().size())).replace("%ping%",String.valueOf(p.getPing())).replace("%world%",p.getWorld().getName()));
             while(used.contains(line)) line += ChatColor.RESET;
             used.add(line);
             o.getScore(line.length()>40 ? line.substring(0,40) : line).setScore(score--);
