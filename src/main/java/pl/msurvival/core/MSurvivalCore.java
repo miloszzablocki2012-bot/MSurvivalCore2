@@ -289,6 +289,10 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
     }
 
     private void withdraw(Player p, String key) {
+        if(inLobby(p)) {
+            p.sendMessage(color("&cKlucze fizyczne wyjmuj dopiero na &aSurvivalu&c. Lobby ma osobny ekwipunek, więc przedmiot mógłby zniknąć po zmianie świata."));
+            return;
+        }
         if(getKeys(p.getName(),key)<=0){ p.sendMessage(msg("no-key").replace("%key%",display(key))); return; }
         setKeys(p.getName(),key,getKeys(p.getName(),key)-1);
         p.getInventory().addItem(keyItem(key,1));
@@ -543,20 +547,35 @@ public final class MSurvivalCore extends JavaPlugin implements Listener {
     }
 
     private void sendConfigLines(org.bukkit.command.CommandSender s, String path) {
+        long delay = 0L;
         for(String line : getConfig().getStringList(path)) {
-            String out = line;
-            if(s instanceof Player p) {
-                out = out.replace("%player%", p.getName())
-                         .replace("%rank%", module("ranks") ? rankDisplay(getRank(p)) : "")
-                         .replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()))
-                         .replace("%ping%", String.valueOf(p.getPing()))
-                         .replace("%world%", p.getWorld().getName());
+            if(line != null && line.startsWith("DELAY:")) {
+                try {
+                    delay += Long.parseLong(line.substring("DELAY:".length()).trim());
+                } catch(Exception ignored) {
+                    delay += 100L;
+                }
+                continue;
             }
-            out = out.replace("%ip%", getConfig().getString("server.ip", "msurvival.6mc.pl"))
-                     .replace("%shop%", getConfig().getString("server.shop", ""))
-                     .replace("%donate%", getConfig().getString("server.donate", "https://tipply.pl/@milekz"))
-                     .replace("%discord%", getConfig().getString("server.discord", ""));
-            s.sendMessage(color(out));
+
+            String finalLine = line;
+            long finalDelay = delay;
+
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                String out = finalLine;
+                if(s instanceof Player p) {
+                    out = out.replace("%player%", p.getName())
+                             .replace("%rank%", module("ranks") ? rankDisplay(getRank(p)) : "")
+                             .replace("%online%", String.valueOf(Bukkit.getOnlinePlayers().size()))
+                             .replace("%ping%", String.valueOf(p.getPing()))
+                             .replace("%world%", p.getWorld().getName());
+                }
+                out = out.replace("%ip%", getConfig().getString("server.ip", "msurvival.6mc.pl"))
+                         .replace("%donate%", getConfig().getString("server.donate", "https://tipply.pl/@milekz"))
+                         .replace("%shop%", "")
+                         .replace("%discord%", getConfig().getString("server.discord", "Link do Discorda znajdziesz na kanale YouTube Milekz"));
+                s.sendMessage(color(out));
+            }, finalDelay);
         }
     }
 

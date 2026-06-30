@@ -1,5 +1,5 @@
 name: MSurvivalCore
-version: 2.4
+version: 2.5
 main: pl.msurvival.core.MSurvivalCore
 api-version: '1.21'
 author: Milekz
